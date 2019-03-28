@@ -1,9 +1,13 @@
 package io.vertx.starter;
 
+import io.vertx.config.ConfigRetriever;
+import io.vertx.config.ConfigRetrieverOptions;
+import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpResponse;
@@ -22,8 +26,29 @@ public class MainVerticle extends AbstractVerticle {
 
   Twitter twitter;
 
+  JsonObject config;
+
   @Override
   public void start(Future<Void> startFuture) {
+
+    ConfigRetriever retriever = ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
+      .addStore(new ConfigStoreOptions().setType("file").setFormat("properties").setConfig(new JsonObject().put("path", "twitter.properties"))));
+
+
+    //TODO make both of these futures part of the initialization
+    retriever.getConfig(ar ->{
+      if (ar.failed()) {
+        startFuture.fail(ar.cause());
+      }else{
+        config = ar.result();
+        System.out.println(config.getString("oauth.consumerKey"));
+        System.out.println(config.getString("oauth.consumerSecret"));
+        System.out.println(config.getString("oauth.accessToken"));
+        System.out.println(config.getString("oauth.accessTokenSecret"));
+      }
+    });
+
+
 
     webClient = WebClient.create(vertx);
     twitter = TwitterFactory.getSingleton();
