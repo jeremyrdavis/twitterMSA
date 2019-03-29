@@ -7,6 +7,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -16,7 +17,6 @@ import io.vertx.ext.web.handler.BodyHandler;
 import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
-import twitter4j.User;
 
 import java.util.List;
 
@@ -36,10 +36,10 @@ public class MainVerticle extends AbstractVerticle {
 
 
     //TODO make both of these futures part of the initialization
-    retriever.getConfig(ar ->{
+    retriever.getConfig(ar -> {
       if (ar.failed()) {
         startFuture.fail(ar.cause());
-      }else{
+      } else {
         config = ar.result();
         System.out.println(config.getString("oauth.consumerKey"));
         System.out.println(config.getString("oauth.consumerSecret"));
@@ -47,7 +47,6 @@ public class MainVerticle extends AbstractVerticle {
         System.out.println(config.getString("oauth.accessTokenSecret"));
       }
     });
-
 
 
     webClient = WebClient.create(vertx);
@@ -68,7 +67,7 @@ public class MainVerticle extends AbstractVerticle {
       .listen(8080, result -> {
         if (result.succeeded()) {
           startFuture.complete();
-        }else {
+        } else {
           startFuture.fail(result.cause());
         }
       });
@@ -85,11 +84,14 @@ public class MainVerticle extends AbstractVerticle {
           // Obtain response
           HttpResponse<Buffer> result = ar.result();
 
+          JsonArray tweets = ar.result().bodyAsJsonArray();
+          JsonObject tweet1 = tweets.getJsonObject(0);
+
           System.out.println("Received response with status code" + result.statusCode());
           HttpServerResponse response = routingContext.response();
           response
-            .putHeader("Content-Type", "text/html")
-            .end(result.bodyAsBuffer());
+            .putHeader("Content-Type", "application/json")
+            .end(tweet1.encodePrettily());
         } else {
           System.out.println("Something went wrong " + ar.cause().getMessage());
           HttpServerResponse response = routingContext.response();
@@ -102,23 +104,23 @@ public class MainVerticle extends AbstractVerticle {
 
   private void timelineHandler(RoutingContext routingContext) {
 
-    try{
-        System.out.println(twitter.getOAuthAccessToken());
-        List<Status> statuses = twitter.getUserTimeline("argntprgrmr");
-        System.out.println("Showing home timeline.");
-        for (Status status : statuses) {
-          System.out.println(status.getUser().getName() + ":" +
-            status.getText());
-        }
-        HttpServerResponse response = routingContext.response();
-        response
-          .putHeader("Content-Type", "text/html")
-          .end(statuses.toString());
-      }catch(Exception e){
-        HttpServerResponse response = routingContext.response();
-        response
-          .putHeader("Content-Type", "text/html")
-          .end("Hello, Twitter!");
+    try {
+      System.out.println(twitter.getOAuthAccessToken());
+      List<Status> statuses = twitter.getUserTimeline("argntprgrmr");
+      System.out.println("Showing home timeline.");
+      for (Status status : statuses) {
+        System.out.println(status.getUser().getName() + ":" +
+          status.getText());
+      }
+      HttpServerResponse response = routingContext.response();
+      response
+        .putHeader("Content-Type", "text/html")
+        .end(statuses.toString());
+    } catch (Exception e) {
+      HttpServerResponse response = routingContext.response();
+      response
+        .putHeader("Content-Type", "text/html")
+        .end("Hello, Twitter!");
     }
 
   }
