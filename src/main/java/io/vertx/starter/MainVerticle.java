@@ -58,7 +58,7 @@ public class MainVerticle extends AbstractVerticle {
 
     Router apiRouter = Router.router(vertx);
     apiRouter.route("/*").handler(BodyHandler.create());
-    apiRouter.get("/timeline").handler(this::timelineHandler);
+    apiRouter.get("/timeline").handler(this::anotherTimelineHandler);
 
     baseRouter.mountSubRouter("/api", apiRouter);
 
@@ -76,14 +76,10 @@ public class MainVerticle extends AbstractVerticle {
 
   private void anotherTimelineHandler(RoutingContext routingContext) {
 
-    webClient.get("https://api.twitter.com/1.1/statuses/user_timeline.json")
+    webClient.getAbs("https://api.twitter.com/1.1/statuses/user_timeline.json")
       .addQueryParam("screen_name", "argntprgrmr")
       .addQueryParam("count", "2")
-      .putHeader("oauth_consumer_key", config.getString(TWIITTER_PROPS.oauth_consumerKey))
-      .putHeader("oauth_token", config.getString(TWIITTER_PROPS.oauth_token))
-      .putHeader("oauth_signature_method", "HMAC-SHA1")
-      .putHeader("oauth_version", "1.0")
-      .putHeader("oauth_signature", "YC03zJL%2F2X9YOsNV6m8NfOwhVWU%3D")
+      .putHeader("Authorization", "OAuth oauth_consumer_key=\"ESDYTwuYAojuvNJwshUSUlJxY\",oauth_token=\"702198386284433409-acU6wtfsW66Vot9fduwMLf6J1f2Q0zC\",oauth_signature_method=\"HMAC-SHA1\",oauth_timestamp=\"1553820284\",oauth_nonce=\"wi0usXx8bLE\",oauth_version=\"1.0\",oauth_signature=\"9p99bTirUG%2BTZEDqQRtwHtozMeA%3D\"")
       .send(ar -> {
         if (ar.succeeded()) {
           // Obtain response
