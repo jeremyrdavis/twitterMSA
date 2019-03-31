@@ -58,6 +58,7 @@ public class MainVerticle extends AbstractVerticle {
     Router apiRouter = Router.router(vertx);
     apiRouter.route("/*").handler(BodyHandler.create());
     apiRouter.get("/timeline").handler(this::anotherTimelineHandler);
+    apiRouter.post("/status").handler(this::updateStatus);
 
     baseRouter.mountSubRouter("/api", apiRouter);
 
@@ -73,25 +74,43 @@ public class MainVerticle extends AbstractVerticle {
       });
   }
 
+  private void updateStatus(RoutingContext routingContext) {
+
+  }
+
   private void anotherTimelineHandler(RoutingContext routingContext) {
 
     webClient.getAbs("https://api.twitter.com/1.1/statuses/user_timeline.json")
       .addQueryParam("screen_name", "argntprgrmr")
       .addQueryParam("count", "2")
-      .putHeader("Authorization", "OAuth oauth_consumer_key=\"ESDYTwuYAojuvNJwshUSUlJxY\",oauth_token=\"702198386284433409-acU6wtfsW66Vot9fduwMLf6J1f2Q0zC\",oauth_signature_method=\"HMAC-SHA1\",oauth_timestamp=\"1553820284\",oauth_nonce=\"wi0usXx8bLE\",oauth_version=\"1.0\",oauth_signature=\"9p99bTirUG%2BTZEDqQRtwHtozMeA%3D\"")
+      .putHeader("Authorization", "OAuth oauth_consumer_key=\"ESDYTwuYAojuvNJwshUSUlJxY\"," +
+        "oauth_token=\"702198386284433409-acU6wtfsW66Vot9fduwMLf6J1f2Q0zC\"" +
+        ",oauth_signature_method=\"HMAC-SHA1\"" +
+        ",oauth_timestamp=\"1553985392\"" +
+        ",oauth_nonce=\"ZIlMdAc6wSJ\"" +
+        ",oauth_version=\"1.0\"" +
+        ",oauth_signature=\"1GfNzxD7fTaPhV4FaEXRZoBYqG8%3D\"")
       .send(ar -> {
         if (ar.succeeded()) {
+          System.out.println("succeeded");
           // Obtain response
           HttpResponse<Buffer> result = ar.result();
+          System.out.println("result");
 
           JsonArray tweets = ar.result().bodyAsJsonArray();
+          System.out.println(tweets);
           JsonObject tweet1 = tweets.getJsonObject(0);
+          System.out.println(tweet1);
+          JsonObject user = tweet1.getJsonObject("user");
+          System.out.println(user);
+          JsonObject tweeter = new JsonObject();
+          tweeter.put("handle", user.getString("screen_name"));
 
           System.out.println("Received response with status code" + result.statusCode());
           HttpServerResponse response = routingContext.response();
           response
             .putHeader("Content-Type", "application/json")
-            .end(tweet1.encodePrettily());
+            .end(user.encodePrettily());
         } else {
           System.out.println("Something went wrong " + ar.cause().getMessage());
           HttpServerResponse response = routingContext.response();
