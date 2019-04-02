@@ -83,8 +83,8 @@ public class MainVerticle extends AbstractVerticle {
     webClient.getAbs("https://api.twitter.com/1.1/statuses/user_timeline.json")
       .addQueryParam("screen_name", "argntprgrmr")
       .addQueryParam("count", "2")
-      .putHeader("Authorization", "OAuth oauth_consumer_key=\"ESDYTwuYAojuvNJwshUSUlJxY\"," +
-        "oauth_token=\"702198386284433409-acU6wtfsW66Vot9fduwMLf6J1f2Q0zC\"" +
+      .putHeader("Authorization", "OAuth oauth_consumer_key=\"QRAlzosOkVls4UtpSsCcw3nFP\"," +
+        "oauth_token=\"702198386284433409-OYOF6uNWqRRfpjS3cZHmL6DlIVf7J69\"" +
         ",oauth_signature_method=\"HMAC-SHA1\"" +
         ",oauth_timestamp=\"1553985392\"" +
         ",oauth_nonce=\"ZIlMdAc6wSJ\"" +
