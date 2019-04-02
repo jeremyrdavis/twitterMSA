@@ -57,8 +57,7 @@ public class MainVerticle extends AbstractVerticle {
 
     Router apiRouter = Router.router(vertx);
     apiRouter.route("/*").handler(BodyHandler.create());
-    apiRouter.get("/timeline").handler(this::anotherTimelineHandler);
-    apiRouter.post("/status").handler(this::updateStatus);
+    apiRouter.get("/timeline").handler(this::twitter4jTimelineHandler);
 
     baseRouter.mountSubRouter("/api", apiRouter);
 
@@ -74,7 +73,31 @@ public class MainVerticle extends AbstractVerticle {
       });
   }
 
-  private void updateStatus(RoutingContext routingContext) {
+  private void twitter4jTimelineHandler(RoutingContext routingContext) {
+
+    vertx.executeBlocking((Future<Object> future) -> {
+        try{
+          // The factory instance is re-useable and thread safe.
+          Twitter twitter = TwitterFactory.getSingleton();
+          List<Status> statuses = twitter.getHomeTimeline();
+          System.out.println("Showing home timeline.");
+          JsonArray result = new JsonArray();
+          for (Status status : statuses) {
+            result.add(new JsonObject().put("status", status.getText()));
+          }
+          future.complete(result);
+        }catch(Exception e){
+          future.fail(e.getMessage());
+        }
+      },
+      res -> {
+        HttpServerResponse response = routingContext.response();
+        response
+          .putHeader("Content-Type", "application/json")
+          .end(res.result().toString());
+    });
+
+
 
   }
 

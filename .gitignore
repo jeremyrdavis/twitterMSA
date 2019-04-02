@@ -12,3 +12,4 @@ buildNumber.properties
 .mvn/
 *.iml
 twitter.properties
+twitter4j.properties
