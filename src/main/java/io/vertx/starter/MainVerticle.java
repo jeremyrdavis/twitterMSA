@@ -18,6 +18,8 @@ import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterFactory;
 
+import java.sql.Date;
+import java.time.Instant;
 import java.util.List;
 
 public class MainVerticle extends AbstractVerticle {
@@ -58,6 +60,7 @@ public class MainVerticle extends AbstractVerticle {
     Router apiRouter = Router.router(vertx);
     apiRouter.route("/*").handler(BodyHandler.create());
     apiRouter.get("/timeline").handler(this::twitter4jTimelineHandler);
+    apiRouter.get("/status").handler(this::twtitter4jStatusHandler);
 
     baseRouter.mountSubRouter("/api", apiRouter);
 
@@ -73,12 +76,42 @@ public class MainVerticle extends AbstractVerticle {
       });
   }
 
+  private void twtitter4jStatusHandler(RoutingContext routingContext) {
+
+    StringBuilder stringBuilder = new StringBuilder()
+      .append("Tweet sent from Vert.x at ")
+      .append(Date.from(Instant.now()).toString());
+
+    vertx.executeBlocking((Future<Object> future) -> {
+      try {
+        Status status = twitter.updateStatus(stringBuilder.toString());
+        System.out.println("Successfully updated the status to [" + status.getText() + "].");
+        future.complete(status.getText());
+      } catch (Exception e) {
+        future.fail(e.getMessage());
+      }
+    }, res -> {
+        if (res.succeeded()) {
+          HttpServerResponse response = routingContext.response();
+          response
+            .putHeader("Content-Type", "application/json")
+            .end(new JsonObject().put("status", res.result().toString()).toBuffer());
+        }else{
+          HttpServerResponse response = routingContext.response();
+          response
+            .putHeader("Content-Type", "application/json")
+            .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
+        }
+
+    });
+  }
+
   private void twitter4jTimelineHandler(RoutingContext routingContext) {
 
     vertx.executeBlocking((Future<Object> future) -> {
         try{
+
           // The factory instance is re-useable and thread safe.
-          Twitter twitter = TwitterFactory.getSingleton();
           List<Status> statuses = twitter.getHomeTimeline();
           System.out.println("Showing home timeline.");
           JsonArray result = new JsonArray();
@@ -91,10 +124,17 @@ public class MainVerticle extends AbstractVerticle {
         }
       },
       res -> {
-        HttpServerResponse response = routingContext.response();
-        response
-          .putHeader("Content-Type", "application/json")
-          .end(res.result().toString());
+        if (res.succeeded()) {
+          HttpServerResponse response = routingContext.response();
+          response
+            .putHeader("Content-Type", "application/json")
+            .end(res.result().toString());
+        }else{
+          HttpServerResponse response = routingContext.response();
+          response
+            .putHeader("Content-Type", "application/json")
+            .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
+        }
     });
 
 
