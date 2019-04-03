@@ -87,6 +87,7 @@ public class MainVerticle extends AbstractVerticle {
         JsonArray result = new JsonArray();
         for (Status s : statuses) {
           JsonObject mention = new JsonObject()
+            .put("screen_name", s.getUser().getScreenName())
             .put("user", s.getUser().getName())
             .put("status", s.getText());
           result.add(mention);
@@ -170,75 +171,6 @@ public class MainVerticle extends AbstractVerticle {
             .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
         }
     });
-
-
-
-  }
-
-  private void anotherTimelineHandler(RoutingContext routingContext) {
-
-    webClient.getAbs("https://api.twitter.com/1.1/statuses/user_timeline.json")
-      .addQueryParam("screen_name", "argntprgrmr")
-      .addQueryParam("count", "2")
-      .putHeader("Authorization", "OAuth oauth_consumer_key=\"QRAlzosOkVls4UtpSsCcw3nFP\"," +
-        "oauth_token=\"702198386284433409-OYOF6uNWqRRfpjS3cZHmL6DlIVf7J69\"" +
-        ",oauth_signature_method=\"HMAC-SHA1\"" +
-        ",oauth_timestamp=\"1553985392\"" +
-        ",oauth_nonce=\"ZIlMdAc6wSJ\"" +
-        ",oauth_version=\"1.0\"" +
-        ",oauth_signature=\"1GfNzxD7fTaPhV4FaEXRZoBYqG8%3D\"")
-      .send(ar -> {
-        if (ar.succeeded()) {
-          System.out.println("succeeded");
-          // Obtain response
-          HttpResponse<Buffer> result = ar.result();
-          System.out.println("result");
-
-          JsonArray tweets = ar.result().bodyAsJsonArray();
-          System.out.println(tweets);
-          JsonObject tweet1 = tweets.getJsonObject(0);
-          System.out.println(tweet1);
-          JsonObject user = tweet1.getJsonObject("user");
-          System.out.println(user);
-          JsonObject tweeter = new JsonObject();
-          tweeter.put("handle", user.getString("screen_name"));
-
-          System.out.println("Received response with status code" + result.statusCode());
-          HttpServerResponse response = routingContext.response();
-          response
-            .putHeader("Content-Type", "application/json")
-            .end(user.encodePrettily());
-        } else {
-          System.out.println("Something went wrong " + ar.cause().getMessage());
-          HttpServerResponse response = routingContext.response();
-          response
-            .putHeader("Content-Type", "text/html")
-            .end(ar.cause().getMessage());
-        }
-      });
-  }
-
-  private void timelineHandler(RoutingContext routingContext) {
-
-    try {
-      System.out.println(twitter.getOAuthAccessToken());
-      List<Status> statuses = twitter.getUserTimeline("argntprgrmr");
-      System.out.println("Showing home timeline.");
-      for (Status status : statuses) {
-        System.out.println(status.getUser().getName() + ":" +
-          status.getText());
-      }
-      HttpServerResponse response = routingContext.response();
-      response
-        .putHeader("Content-Type", "text/html")
-        .end(statuses.toString());
-    } catch (Exception e) {
-      HttpServerResponse response = routingContext.response();
-      response
-        .putHeader("Content-Type", "text/html")
-        .end("Hello, Twitter!");
-    }
-
   }
 
   private void indexHandler(RoutingContext routingContext) {
