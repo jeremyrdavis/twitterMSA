@@ -61,6 +61,7 @@ public class MainVerticle extends AbstractVerticle {
     apiRouter.route("/*").handler(BodyHandler.create());
     apiRouter.get("/timeline").handler(this::twitter4jTimelineHandler);
     apiRouter.get("/status").handler(this::twtitter4jStatusHandler);
+    apiRouter.get("/mentions").handler(this::twitter4jMentions);
 
     baseRouter.mountSubRouter("/api", apiRouter);
 
@@ -74,6 +75,39 @@ public class MainVerticle extends AbstractVerticle {
           startFuture.fail(result.cause());
         }
       });
+  }
+
+  private void twitter4jMentions(RoutingContext routingContext) {
+
+    vertx.executeBlocking((Future<Object> future) ->{
+
+      try {
+        List<Status> statuses = twitter.getMentionsTimeline();
+        System.out.println("Showing @jbossdemo's mentions.");
+        JsonArray result = new JsonArray();
+        for (Status s : statuses) {
+          JsonObject mention = new JsonObject()
+            .put("user", s.getUser().getName())
+            .put("status", s.getText());
+          result.add(mention);
+        }
+        future.complete(result);
+      } catch(Exception e) {
+        future.fail(e.getMessage());
+      }
+    }, res -> {
+      if (res.succeeded()) {
+        HttpServerResponse response = routingContext.response();
+        response
+          .putHeader("Content-Type", "application/json")
+          .end(res.result().toString());
+      }else{
+        HttpServerResponse response = routingContext.response();
+        response
+          .putHeader("Content-Type", "application/json")
+          .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
+      }
+    });
   }
 
   private void twtitter4jStatusHandler(RoutingContext routingContext) {
