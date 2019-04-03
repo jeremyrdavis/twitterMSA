@@ -5,13 +5,11 @@ import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
 import twitter4j.Status;
@@ -85,7 +83,7 @@ public class MainVerticle extends AbstractVerticle {
         twitter.sendDirectMessage(1113238476600893445L, "Hi");
         System.out.println("Sending direct message to @vertxdemo");
         future.complete(new JsonObject().put("result", "message sent"));
-      } catch(Exception e) {
+      } catch (Exception e) {
         future.fail(e.getMessage());
       }
     }, res -> {
@@ -94,7 +92,7 @@ public class MainVerticle extends AbstractVerticle {
         response
           .putHeader("Content-Type", "application/json")
           .end(res.result().toString());
-      }else{
+      } else {
         HttpServerResponse response = routingContext.response();
         response
           .putHeader("Content-Type", "application/json")
@@ -105,7 +103,7 @@ public class MainVerticle extends AbstractVerticle {
 
   private void twitter4jMentions(RoutingContext routingContext) {
 
-    vertx.executeBlocking((Future<Object> future) ->{
+    vertx.executeBlocking((Future<Object> future) -> {
 
       try {
         List<Status> statuses = twitter.getMentionsTimeline();
@@ -119,7 +117,7 @@ public class MainVerticle extends AbstractVerticle {
           result.add(mention);
         }
         future.complete(result);
-      } catch(Exception e) {
+      } catch (Exception e) {
         future.fail(e.getMessage());
       }
     }, res -> {
@@ -128,7 +126,7 @@ public class MainVerticle extends AbstractVerticle {
         response
           .putHeader("Content-Type", "application/json")
           .end(res.result().toString());
-      }else{
+      } else {
         HttpServerResponse response = routingContext.response();
         response
           .putHeader("Content-Type", "application/json")
@@ -152,17 +150,17 @@ public class MainVerticle extends AbstractVerticle {
         future.fail(e.getMessage());
       }
     }, res -> {
-        if (res.succeeded()) {
-          HttpServerResponse response = routingContext.response();
-          response
-            .putHeader("Content-Type", "application/json")
-            .end(new JsonObject().put("status", res.result().toString()).toBuffer());
-        }else{
-          HttpServerResponse response = routingContext.response();
-          response
-            .putHeader("Content-Type", "application/json")
-            .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
-        }
+      if (res.succeeded()) {
+        HttpServerResponse response = routingContext.response();
+        response
+          .putHeader("Content-Type", "application/json")
+          .end(new JsonObject().put("status", res.result().toString()).toBuffer());
+      } else {
+        HttpServerResponse response = routingContext.response();
+        response
+          .putHeader("Content-Type", "application/json")
+          .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
+      }
 
     });
   }
@@ -170,7 +168,7 @@ public class MainVerticle extends AbstractVerticle {
   private void twitter4jTimelineHandler(RoutingContext routingContext) {
 
     vertx.executeBlocking((Future<Object> future) -> {
-        try{
+        try {
 
           // The factory instance is re-useable and thread safe.
           List<Status> statuses = twitter.getHomeTimeline();
@@ -180,7 +178,7 @@ public class MainVerticle extends AbstractVerticle {
             result.add(new JsonObject().put("status", status.getText()));
           }
           future.complete(result);
-        }catch(Exception e){
+        } catch (Exception e) {
           future.fail(e.getMessage());
         }
       },
@@ -190,13 +188,13 @@ public class MainVerticle extends AbstractVerticle {
           response
             .putHeader("Content-Type", "application/json")
             .end(res.result().toString());
-        }else{
+        } else {
           HttpServerResponse response = routingContext.response();
           response
             .putHeader("Content-Type", "application/json")
             .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
         }
-    });
+      });
   }
 
   private void indexHandler(RoutingContext routingContext) {
