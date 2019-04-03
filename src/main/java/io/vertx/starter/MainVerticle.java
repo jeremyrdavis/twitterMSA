@@ -62,6 +62,7 @@ public class MainVerticle extends AbstractVerticle {
     apiRouter.get("/timeline").handler(this::twitter4jTimelineHandler);
     apiRouter.get("/status").handler(this::twtitter4jStatusHandler);
     apiRouter.get("/mentions").handler(this::twitter4jMentions);
+    apiRouter.get("/dm").handler(this::twitter4jDirectMessageHandler);
 
     baseRouter.mountSubRouter("/api", apiRouter);
 
@@ -75,6 +76,31 @@ public class MainVerticle extends AbstractVerticle {
           startFuture.fail(result.cause());
         }
       });
+  }
+
+  private void twitter4jDirectMessageHandler(RoutingContext routingContext) {
+
+    vertx.executeBlocking((Future<Object> future) -> {
+      try {
+        twitter.sendDirectMessage(1113238476600893445L, "Hi");
+        System.out.println("Sending direct message to @vertxdemo");
+        future.complete(new JsonObject().put("result", "message sent"));
+      } catch(Exception e) {
+        future.fail(e.getMessage());
+      }
+    }, res -> {
+      if (res.succeeded()) {
+        HttpServerResponse response = routingContext.response();
+        response
+          .putHeader("Content-Type", "application/json")
+          .end(res.result().toString());
+      }else{
+        HttpServerResponse response = routingContext.response();
+        response
+          .putHeader("Content-Type", "application/json")
+          .end(new JsonObject().put("error", res.cause().getMessage()).toBuffer());
+      }
+    });
   }
 
   private void twitter4jMentions(RoutingContext routingContext) {
