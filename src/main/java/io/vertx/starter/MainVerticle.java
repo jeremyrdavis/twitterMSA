@@ -31,6 +31,8 @@ public class MainVerticle extends AbstractVerticle {
   @Override
   public void start(Future<Void> startFuture) {
 
+    vertx.deployVerticle(new TwitterStreamVerticle());
+
     ConfigRetriever retriever = ConfigRetriever.create(vertx, new ConfigRetrieverOptions()
       .addStore(new ConfigStoreOptions().setType("file").setFormat("properties").setConfig(new JsonObject().put("path", "twitter.properties"))));
 
